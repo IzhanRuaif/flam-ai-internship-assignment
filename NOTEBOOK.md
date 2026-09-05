@@ -85,3 +85,56 @@ script), the recommended fix is tokenizer standardization rather
 than per-language cost budgeting, and FLORES's lack of code-mixed/
 informal text is the key caveat before trusting these numbers in
 production. Part A complete.
+
+
+## Day 4 — Part B: capacity reconciliation
+
+### Goal
+Reconcile theoretical KV-cache capacity against observed benchmark
+behavior, diagnose the throughput anomaly at high batch sizes, and
+correct REPORT_v0.md's serving throughput claims.
+
+### B1 result
+Calculated theoretical max concurrent sequences at max_model_len
+(4096 tokens): ~28.93 (floor 28), using KV bytes/token = 114,688
+(derived from layers x KV_heads x head_dim x 2 x 2 bytes fp16).
+Observed KV saturation (util >0.9, preemption starting) occurs
+between batch 24-32 in bench_log.csv -- reasonably close to theory,
+with the residual gap plausibly explained by page-level allocation
+fragmentation, the non-KV overhead being a stated assumption rather
+than a measurement, and possible GB/GiB unit ambiguity.
+
+### B2 result
+reported_tok_s peaks at batch 24 (1607.4 tok/s) and declines at
+batch 32 (1384.0) and batch 48 (1298.5), contradicting
+REPORT_v0.md's linear-scaling claim (predicted ~3200 tok/s at batch
+48). Mechanism: kv_cache_util saturates near 0.97 from batch 32
+onward, triggering preemption (7 then 23 sequences), which forces
+wasted recompute.
+
+### B3 result (major finding)
+Found that reported_tok_s itself is miscalculated: it counts prompt
+(prefill) tokens as if they were generated output, following
+reported_tok_s = (prompt_len+gen_len) x num_requests / wall_clock_s
+-- confirmed by an exact constant ratio to true goodput (3x for
+short prompts, 8x for long prompts) across every row regardless of
+batch size. True goodput (completed_output_tokens / wall_clock_s)
+is far lower than reported, and still peaks at batch 24, confirming
+B2's capacity recommendation on corrected numbers. Cross-checked
+with an independent itl_ms_p50-based estimate: the two methods agree
+when preempted_seqs=0, but diverge sharply once preemption begins,
+because itl_ms_p50 is a median and does not capture preemption
+stalls -- a second, distinct measurement issue from the prefill-
+counting bug.
+
+### Revision
+Initial B3 script only computed one goodput method; added the
+independent itl_ms_p50 cross-check after noticing the constant-ratio
+pattern suggested a definitional bug worth verifying two ways rather
+than trusting a single derivation.
+
+### B4
+Selected KV-cache preemption recompute rate as the one production
+metric that would most directly confirm the mechanism, since it
+measures the proposed cause (wasted recompute from eviction) rather
+than a downstream symptom.
