@@ -138,3 +138,33 @@ Selected KV-cache preemption recompute rate as the one production
 metric that would most directly confirm the mechanism, since it
 measures the proposed cause (wasted recompute from eviction) rather
 than a downstream symptom.
+
+
+## Day 5 — Part C: decision memo
+
+### Goal
+Recommend one of SFT / rewriter model / prompt engineering for making
+outputs more casual/conversational, under stated resource constraints.
+
+### Decision
+Recommended prompt engineering. Under the given constraints (1x
+A100-80GB for 14 days, ~10 reviewer-hours/week), reviewer bandwidth
+is the binding constraint, not compute. SFT and rewriter approaches
+both require building labeled data first, which would consume most
+of the available reviewer time before any training or evaluation
+could happen. Prompt engineering needs no training data, ships
+immediately, and is fully reversible.
+
+### Arithmetic
+Reviewer capacity over 2 weeks: 10 hrs/week x 2 = 20 hours total,
+x 40 samples/hour = 800 samples. Day 1 budget: 2 hours = 80 samples.
+
+### Success/kill criteria
+Success: >=75% of outputs rated both casual and meaning-preserving.
+Kill: if no prompt variant reaches 60% dual-pass rate across 3
+variants on an 80-sample Day-1 batch, escalate to the rewriter
+approach using the reserved GPU budget.
+
+### Revision
+None -- assumptions and thresholds were set directly based on the
+stated constraints without needing course-correction.
