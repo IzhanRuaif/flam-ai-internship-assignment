@@ -76,3 +76,12 @@ Selected tokens-per-sentence as the primary routing metric over tokens-per-word 
 
 ### Revision
 None needed to the analysis script itself. Note for future reference: grapheme count is an NFC-codepoint approximation, not a true Unicode grapheme cluster count — documented as a caveat in results_interpretation.md rather than treated as exact.
+
+## Day 3 (cont.) — Part A4: recommendation memo
+
+Wrote the 1-page memo based on A2+A3 findings. Core message: the
+original report's root-cause claim was wrong (tokenizer, not
+script), the recommended fix is tokenizer standardization rather
+than per-language cost budgeting, and FLORES's lack of code-mixed/
+informal text is the key caveat before trusting these numbers in
+production. Part A complete.
