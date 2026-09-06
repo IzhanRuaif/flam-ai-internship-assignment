@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository audits and corrects a set of tokenizer efficiency and LLM serving capacity claims from a draft internal report (`REPORT_v0.md`). Part A builds a 1,000-sentence multilingual parallel corpus, audits a flawed fertility-measurement script, and shows that tokenizer choice — not language/script — is the dominant driver of cross-language tokenization cost. Part B reconciles theoretical GPU KV-cache capacity against observed benchmark behavior and identifies a metric-definition bug that caused the original report to badly overstate serving throughput. Part C is a resource-constrained decision memo recommending an approach for making model outputs more casual/conversational.
+This repository audits and corrects a set of tokenizer efficiency and LLM serving capacity claims from a draft internal report (`REPORT_v0.md`). Part A builds a 1,000-sentence multilingual parallel corpus, audits a flawed fertility-measurement script, and shows that tokenizer choice materially changes the observed cross-language tokenization gap — meaning the large gap under GPT-2 is not an inherent, fixed property of language/script alone, though a smaller residual gap remains even under a multilingual tokenizer. Part B reconciles theoretical GPU KV-cache capacity against observed benchmark behavior and identifies a metric-definition bug that caused the original report to badly overstate serving throughput. Part C is a resource-constrained decision memo recommending an approach for making model outputs more casual/conversational.
 
 ## Repository Structure
 partA/
@@ -69,7 +69,7 @@ All results above have been independently reproduced from a fresh `git clone` an
 
 ## Part A Summary
 
-Audited `fertility.py` and confirmed three methodological bugs (non-robust whitespace splitting, biased mean-of-ratios aggregation, an asymmetric lowercasing confound). Corrected Hindi/English fertility ratio: 6.11x (vs the original report's 5.89x — similar magnitude, but for the wrong reasons). At scale, on the full 1,000-sentence corpus, GPT-2 shows extreme fertility for Tamil and Kannada (20-25x English) — far worse than the Hindi gap the original report measured. Switching to a multilingual tokenizer (xlm-roberta-base) cuts this to ~2.5x, proving the gap is a property of the tokenizer, not the script, contradicting the original report's stated conclusion.
+Audited `fertility.py` and confirmed three methodological bugs (non-robust whitespace splitting, biased mean-of-ratios aggregation, an asymmetric lowercasing confound). Corrected Hindi/English fertility ratio: 6.11x (vs the original report's 5.89x — similar magnitude, but for the wrong reasons). At scale, on the full 1,000-sentence corpus, GPT-2 shows extreme fertility for Tamil and Kannada (20-25x English) — far worse than the Hindi gap the original report measured. Switching to a multilingual tokenizer (xlm-roberta-base) cuts this to ~2.5x, showing tokenizer choice — not solely script — materially drives the gap, contradicting the original report's absolute claim that the difference is purely a script property. This is a model-selection/training-time finding, not a recommendation to swap the tokenizer of an already-deployed model.
 
 ## Part B Summary
 
@@ -81,7 +81,7 @@ Recommended prompt engineering over SFT or a rewriter model, given that reviewer
 
 ## Key Findings
 
-1. Tokenizer choice, not language script, is the dominant factor in cross-language tokenization cost (Part A3).
+1. Tokenizer choice materially changes cross-language tokenization cost — the large GPT-2 gap is not an inherent property of language/script alone, though a smaller residual gap persists even under a multilingual tokenizer (Part A3).
 2. The original report's throughput metric silently counted prefill tokens as generated output, inflating results by 3-8x (Part B3).
 3. True serving throughput peaks at batch 24 and declines past it due to KV-cache saturation — contradicting the original report's recommendation to increase batch size (Part B2/B3).
 
