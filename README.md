@@ -75,6 +75,8 @@ Audited `fertility.py` and confirmed three methodological bugs (non-robust white
 
 Derived theoretical KV-cache capacity (~28.93 concurrent sequences at 4096-token context) and reconciled it against observed benchmark saturation (batch 24-32). Found the benchmark's `reported_tok_s` column counts prompt (prefill) tokens as generated output, inflating throughput by a constant 3x-8x factor depending on prompt length — directly explaining the original report's incorrect "longer prompts = better GPU utilization" claim. True goodput peaks at batch 24 and declines afterward due to KV-cache saturation and preemption, the opposite of the original report's linear-scaling recommendation.
 
+An interactive visualization of this throughput-vs-batch-size pattern is available at: https://www.desmos.com/calculator/be9gyfgdyi
+
 ## Part C Summary
 
 Recommended prompt engineering over SFT or a rewriter model, given that reviewer bandwidth (not compute) is the binding constraint under the stated resources. Includes explicit success metric, kill criterion, and first-experiment plan.
