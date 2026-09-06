@@ -86,7 +86,7 @@ None needed to the analysis script itself. Note for future reference: grapheme c
 
 ## Part A4 — Recommendation memo
 
-Wrote the 1-page memo based on A2+A3 findings. Core message: the original report's root-cause claim was wrong (tokenizer, not script), the recommended fix is tokenizer standardization rather than per-language cost budgeting, and FLORES's lack of code-mixed/informal text is the key caveat before trusting these numbers in production. Part A complete.
+Wrote the 1-page memo based on A2+A3 findings. Core message: the original report's absolute root-cause claim was unsupported -- tokenizer choice materially changes the observed gap, while a residual language/script effect likely remains. The recommended fix is preferring tokenizer-efficient models at selection/training time, not swapping an existing deployed model's tokenizer, and FLORES's lack of code-mixed/informal text is the key caveat before trusting these numbers in production. Part A complete.
 
 ---
 
