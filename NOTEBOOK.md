@@ -74,7 +74,7 @@ xlm-roberta-base fertility (tok/word): eng 1.40, hin 1.49, tam 2.46, kan 2.57.
 
 Tamil and Kannada fertility under gpt2 (20-25x English) was far worse than anticipated, and far worse than the eng/hin gap the original report measured. Switching to xlm-roberta-base reduced Tamil/Kannada fertility to ~2.5x English — roughly a 10x improvement from tokenizer choice alone, on the same text.
 
-This falsifies REPORT_v0.md's claim that fertility differences are "a property of the script, not the tokenizer" — the evidence shows tokenizer choice is the dominant factor.
+This challenges REPORT_v0.md's absolute claim that fertility differences are purely "a property of the script, not the tokenizer" — the evidence shows tokenizer choice materially changes the gap, though a residual ~1.25-1.35x gap (by tokens-per-sentence, XLM-R) remains even with a multilingual tokenizer, so script/language characteristics likely still contribute some real cost.
 
 ### Metric decision
 Selected tokens-per-sentence as the primary routing metric over tokens-per-word (unreliable across scripts with different word segmentation conventions) and tokens-per-byte (biased toward multi-byte scripts like Tamil/Kannada, which use ~3 bytes/char in UTF-8 and so appear artificially efficient by this metric).
@@ -119,7 +119,7 @@ Initial B3 script only computed one goodput method; added the independent itl_ms
 
 ## Part B4 — Confirming metric
 
-Selected KV-cache preemption recompute rate as the one production metric that would most directly confirm the mechanism, since it measures the proposed cause (wasted recompute from eviction) rather than a downstream symptom.
+Selected `preempted_seqs` (tracked as a live rate) alongside `kv_cache_util` as the confirming production metrics, since both are already exposed by the benchmarking harness per model_spec.md's column notes -- deliberately avoided proposing a new, unverified counter name not grounded in the described serving setup.
 
 ---
 
